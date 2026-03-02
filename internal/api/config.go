@@ -21,7 +21,7 @@ var AppServerConfig ServerConfig
 
 type Config struct {
 	App      App      `toml:"app"`
-	Theme    Theme    `toml:"theme"`
+	Theme    Theme    `toml:"theme" comment:"Format: ['Light color', 'Dark color']"`
 	Filters  Filters  `toml:"filters"`
 	Keybinds Keybinds `toml:"keybinds"`
 	Columns  Columns  `toml:"columns"`
@@ -43,7 +43,7 @@ type Security struct {
 }
 
 type App struct {
-	ReplayGain    string `toml:"replaygain"`
+	ReplayGain    string `toml:"replaygain" comment:"Type of replaygain: 'track', 'album', 'no'"`
 	Notifications bool   `toml:"desktop_notifications"`
 	DiscordRPC    bool   `toml:"discord_rich_presence"`
 	MouseSupport  bool   `toml:"mouse_support"`
@@ -57,16 +57,16 @@ type Theme struct {
 }
 
 type Filters struct {
-	Titles           []string `toml:"titles"`
-	Artists          []string `toml:"artists"`
-	AlbumArtists     []string `toml:"album_artists"`
-	MinDuration      int      `toml:"min_duration"`
-	Genres           []string `toml:"genres"`
-	Notes            []string `toml:"notes"`
-	Paths            []string `toml:"paths"`
-	MaxPlayCount     int      `toml:"max_play_count"`
-	ExcludeFavorites bool     `toml:"exclude_favorites"`
-	MaxRating        int      `toml:"max_rating"`
+	Titles           []string `toml:"titles" comment:"Exclude songs with titles containing these strings"`
+	Artists          []string `toml:"artists" comment:"Exclude songs by these artists"`
+	AlbumArtists     []string `toml:"album_artists" comment:"Exclude songs by these album artists"`
+	MinDuration      int      `toml:"min_duration" comment:"Exclude songs with a duration shorter than or equal to this length (in seconds), 0 to disable"`
+	Genres           []string `toml:"genres" comment:"Exclude songs belonging to these genres"`
+	Notes            []string `toml:"notes" comment:"Exclude songs with comments/notes containing these strings"`
+	Paths            []string `toml:"paths" comment:"Exclude songs whose file path contains these strings"`
+	MaxPlayCount     int      `toml:"max_play_count" comment:"Exclude songs with a play count less than or equal to this number, 0 to disable"`
+	ExcludeFavorites bool     `toml:"exclude_favorites" comment:"Set to true to exclude songs that are marked as a favorite/starred"`
+	MaxRating        int      `toml:"max_rating" comment:"Exclude songs with a rating less than or equal to this number (1-5), 0 to disable"`
 }
 
 type Columns struct {

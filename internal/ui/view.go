@@ -714,7 +714,7 @@ func footerInformation(m model, width int) string {
 	bottomRow = lipgloss.JoinHorizontal(
 		lipgloss.Center,
 		currentTime,
-		progressBar,
+		lipgloss.NewStyle().Foreground(Theme.Special).Render(progressBar),
 		totalTime,
 	)
 

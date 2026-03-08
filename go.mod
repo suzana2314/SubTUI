@@ -1,6 +1,6 @@
 module github.com/MattiaPun/SubTUI/v2
 
-go 1.26
+go 1.25.4
 
 require (
 	github.com/atotto/clipboard v0.1.4

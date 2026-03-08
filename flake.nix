@@ -17,7 +17,7 @@
             version = "unstable-${self.shortRev or self.dirtyShortRev or "dev"}";
 
             src = lib.cleanSource self;
-            vendorHash = "sha256-EuVU6t1hGaZTlYVYE8hOj2mQJf2AknzpcP59W9ZyBqA=";
+            vendorHash = "sha256-XtTO9muHlPJu+BHk2+bt7M4tCNGud52cjAswCFpjv2w=";
 
             proxyVendor = true; 
 

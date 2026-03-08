@@ -621,8 +621,8 @@ func footerContent(m model) string {
 		title = "Loading..."
 		artistAlbumText = ""
 	} else {
-		title = m.playerStatus.Title
-		artistAlbumText = m.playerStatus.Artist + " - " + m.playerStatus.Album
+		title = api.SanitizeDisplayString(m.playerStatus.Title)
+		artistAlbumText = api.SanitizeDisplayString(m.playerStatus.Artist + " - " + m.playerStatus.Album)
 	}
 
 	notifyText := ""
@@ -633,8 +633,7 @@ func footerContent(m model) string {
 	const borderWidth = 2
 	const spacing = 3
 
-	topRowGap := m.width - borderWidth - 2*spacing - len(notifyText) - len(title)
-
+	topRowGap := m.width - borderWidth - 2*spacing - runewidth.StringWidth(notifyText) - runewidth.StringWidth(title)
 	if topRowGap > 0 {
 		title += strings.Repeat(" ", topRowGap) + notifyText
 	}
@@ -681,11 +680,11 @@ func footerContent(m model) string {
 	}
 
 	bottomRowGap := 0
-	bottomRowSpaceTaken := borderWidth + 2*spacing + len(artistAlbumText) + len(loopText) + len(volumeText)
+	bottomRowSpaceTaken := borderWidth + 2*spacing + runewidth.StringWidth(artistAlbumText) + runewidth.StringWidth(loopText) + runewidth.StringWidth(volumeText)
 	if artistAlbumText != "" && m.width != 0 && m.width-bottomRowSpaceTaken > 0 {
 		bottomRowGap = m.width - bottomRowSpaceTaken
 	} else if m.width != 0 {
-		bottomRowGap = m.width - borderWidth - 2*spacing - len(loopText)
+		bottomRowGap = m.width - borderWidth - 2*spacing - runewidth.StringWidth(loopText)
 	}
 
 	bottomRowText := artistAlbumText + strings.Repeat(" ", bottomRowGap) + loopText + volumeText

@@ -1,5 +1,14 @@
 package api
 
+import (
+	"encoding/json"
+	"strings"
+	"unicode"
+
+	"golang.org/x/text/unicode/norm"
+	"golang.org/x/text/width"
+)
+
 type SubsonicResponse struct {
 	Response struct {
 		Status            string         `json:"status"`
@@ -94,4 +103,101 @@ type Song struct {
 type Playlist struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+}
+
+// Helper: Unmarshal Song for sanitization
+func (s *Song) UnmarshalJSON(data []byte) error {
+	type Alias Song
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(s),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	s.Title = SanitizeDisplayString(s.Title)
+	s.Artist = SanitizeDisplayString(s.Artist)
+	s.Album = SanitizeDisplayString(s.Album)
+
+	return nil
+}
+
+// Helper: Unmarshal Album for sanitization
+func (a *Album) UnmarshalJSON(data []byte) error {
+	type Alias Album
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(a),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	a.Name = SanitizeDisplayString(a.Name)
+	a.Artist = SanitizeDisplayString(a.Artist)
+
+	return nil
+}
+
+// Helper: Unmarshal Artists for sanitization
+func (a *Artist) UnmarshalJSON(data []byte) error {
+	type Alias Artist
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(a),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	a.Name = SanitizeDisplayString(a.Name)
+
+	return nil
+}
+
+// Helper: Unmarshal Playlists for sanitization
+func (p *Playlist) UnmarshalJSON(data []byte) error {
+	type Alias Playlist
+	aux := &struct {
+		*Alias
+	}{
+		Alias: (*Alias)(p),
+	}
+
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+
+	p.Name = SanitizeDisplayString(p.Name)
+
+	return nil
+}
+
+// Helper: Sanitize string
+func SanitizeDisplayString(s string) string {
+	s = width.Fold.String(s)
+	s = norm.NFC.String(s)
+
+	var b strings.Builder
+	b.Grow(len(s))
+	for _, r := range s {
+		switch {
+		case r == '\n' || r == '\r' || r == '\t':
+			b.WriteRune(r)
+		case unicode.IsControl(r):
+			continue
+		case r == '\u200B' || r == '\u200C' || r == '\u200D' || r == '\uFEFF' || r == '\u00AD':
+			continue
+		default:
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
 }

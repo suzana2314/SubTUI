@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/MattiaPun/SubTUI/v2/internal/api"
 	"github.com/MattiaPun/SubTUI/v2/internal/integration"
@@ -23,7 +24,8 @@ var (
 
 func main() {
 	// Precedence: cli flag > ENV variable > default
-	defaultConfig := "~/.config/subtui"
+	home, _ := os.UserHomeDir()
+	defaultConfig := filepath.Join(home, ".config", "subtui")
 	if envConfig := os.Getenv("SUBTUI_CONFIG"); envConfig != "" {
 		defaultConfig = envConfig
 	}

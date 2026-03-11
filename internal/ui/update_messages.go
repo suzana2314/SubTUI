@@ -267,7 +267,8 @@ func (m model) handleStatus(msg statusMsg) (tea.Model, tea.Cmd) {
 		}
 
 		windowTitle := fmt.Sprintf("%s - %s", metadata.Title, metadata.Artist)
-		cmds = append(cmds, tea.SetWindowTitle(windowTitle))
+		cmds = append(cmds, tea.SetWindowTitle(windowTitle)) // Update windows title
+		cmds = append(cmds, m.savePlayQueue())               // Server queue update
 	}
 
 	// Scrobble after half of the song, or 4 minutes, whichever happens first

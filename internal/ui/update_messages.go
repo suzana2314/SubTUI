@@ -201,13 +201,17 @@ func (m model) handleStatus(msg statusMsg) (tea.Model, tea.Cmd) {
 	cmds = append(cmds, syncPlayerCmd())
 
 	if m.playerStatus.Path == "" || m.playerStatus.Path == "<nil>" || len(m.queue) == 0 {
-
 		m.queue = []api.Song{}
 		m.lastPlayedSongID = ""
 
-		// MRPIS Update
+		// Clear MRPIS after queue ends
 		if m.dbusInstance != nil {
 			m.dbusInstance.ClearMetadata()
+		}
+
+		// Clear album art after queue ends
+		if api.AppConfig.Theme.DisplayAlbumArt {
+			m.coverArt = nil
 		}
 
 		cmds = append(cmds, tea.SetWindowTitle("SubTUI"))

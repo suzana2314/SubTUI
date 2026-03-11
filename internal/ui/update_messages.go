@@ -292,7 +292,7 @@ func (m model) handleStatus(msg statusMsg) (tea.Model, tea.Cmd) {
 	if m.playerStatus.Path != "" &&
 		m.playerStatus.Path != "<nil>" &&
 		len(m.queue) > 0 &&
-		m.lastPlayedSongPath != m.playerStatus.Path {
+		!strings.Contains(m.playerStatus.Path, "id="+m.queue[m.queueIndex].ID) {
 
 		nextIndex := m.queueIndex + 1
 		m.scrobbled = false

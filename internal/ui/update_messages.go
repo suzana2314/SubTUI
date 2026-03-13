@@ -200,16 +200,17 @@ func (m model) handleStatus(msg statusMsg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 	cmds = append(cmds, syncPlayerCmd())
 
+	// Queue ended
 	if m.playerStatus.Path == "" || m.playerStatus.Path == "<nil>" || len(m.queue) == 0 {
 		m.queue = []api.Song{}
 		m.lastPlayedSongPath = ""
 
-		// Clear MRPIS after queue ends
+		// Clear MRPIS
 		if m.dbusInstance != nil {
 			m.dbusInstance.ClearMetadata()
 		}
 
-		// Clear album art after queue ends
+		// Clear album art
 		if api.AppConfig.Theme.DisplayAlbumArt {
 			m.coverArt = nil
 		}
@@ -218,19 +219,33 @@ func (m model) handleStatus(msg statusMsg) (tea.Model, tea.Cmd) {
 		return m, tea.Batch(cmds...)
 	}
 
-	// Check if next song is playing
-	if len(m.queue) > 0 && m.playerStatus.Path != "" && m.playerStatus.Path != m.lastPlayedSongPath {
-		currentSong := m.queue[m.queueIndex]
+	// Song changed
+	if m.playerStatus.Path != m.lastPlayedSongPath {
 
-		m.lastPlayedSongPath = m.playerStatus.Path
-		m.scrobbled = false
+		// Update queue index after mpv song change
+		if !strings.Contains(m.playerStatus.Path, "id="+m.queue[m.queueIndex].ID) {
+			nextIndex := m.queueIndex + 1
+
+			if nextIndex < len(m.queue) {
+				m.queueIndex = nextIndex
+			} else if nextIndex >= len(m.queue) && m.loopMode == LoopAll {
+				m.queueIndex = 0
+			}
+		}
+
+		// Update queue
+		m.syncNextSong()
+
+		currentSong := m.queue[m.queueIndex]
+		m.lastPlayedSongPath = m.playerStatus.Path // Update previous song
+		m.scrobbled = false                        // Reset scrobble status
 
 		// Setup metadata
 		metadata := integration.Metadata{
 			Title:    currentSong.Title,
 			Artist:   currentSong.Artist,
 			Album:    currentSong.Album,
-			Duration: float64(currentSong.Duration), // Cast int to float64
+			Duration: float64(currentSong.Duration),
 			ImageURL: api.SubsonicCoverArtUrl(currentSong.ID, 500),
 			Rating:   math.Round(float64(currentSong.Rating*10)) / 10,
 		}
@@ -286,41 +301,6 @@ func (m model) handleStatus(msg statusMsg) (tea.Model, tea.Cmd) {
 
 				go api.SubsonicScrobble(currentSong.ID, true)
 			}
-		}
-	}
-
-	if m.playerStatus.Path != "" &&
-		m.playerStatus.Path != "<nil>" &&
-		len(m.queue) > 0 &&
-		!strings.Contains(m.playerStatus.Path, "id="+m.queue[m.queueIndex].ID) {
-
-		nextIndex := m.queueIndex + 1
-		m.scrobbled = false
-
-		// Queue next song
-		if nextIndex < len(m.queue) {
-			m.queueIndex = nextIndex
-		}
-
-		nextNextIndex := -1
-		switch m.loopMode {
-		case LoopOne:
-			nextNextIndex = nextIndex
-		case LoopNone:
-			nextNextIndex = nextIndex + 1
-		case LoopAll:
-			if nextIndex == len(m.queue)-1 {
-				nextNextIndex = 0
-			} else {
-				nextNextIndex = nextIndex + 1
-			}
-		}
-
-		// Queue next next song
-		if nextNextIndex < len(m.queue) {
-			player.UpdateNextSong(m.queue[nextNextIndex].ID)
-		} else { // End of queue, clear MPV
-			go player.UpdateNextSong("")
 		}
 	}
 

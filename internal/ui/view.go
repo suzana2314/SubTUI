@@ -136,10 +136,17 @@ func (m model) BaseView() string {
 		footerBorder = activeBorderStyle
 	}
 
-	footerView := footerBorder.
+	footerTopBorder := footerTopBorder(m)
+	footerContent := footerBorder.
+		BorderTop(false).
 		Width(m.width - 2).
 		Height(footerHeight).
 		Render(footerContent(m))
+
+	footerView := lipgloss.JoinVertical(lipgloss.Left,
+		footerTopBorder,
+		footerContent,
+	)
 
 	// COMBINE ALL VERTICALLY
 	return lipgloss.JoinVertical(lipgloss.Left,
@@ -308,6 +315,7 @@ func mainSongsContent(m model, width int, height int) string {
 	case viewQueue:
 		target = m.queue
 		headerTitle = fmt.Sprintf("QUEUE (%d/%d)", m.queueIndex+1, len(m.queue))
+		emptyStatus = "\n  Start playing some music to view your queue..."
 	}
 
 	// Return if no songs
@@ -540,6 +548,32 @@ func footerContent(m model) string {
 	}
 
 	return "\n" + content
+}
+
+// Generate the footer top border
+func footerTopBorder(m model) string {
+	leftCorner := "╭"
+	rightCorner := "╮"
+
+	var queueStatus string
+	var gapWidth int
+
+	if len(m.queue) > 0 {
+		queueStatus = fmt.Sprintf(" QUEUE (%d/%d) ", m.queueIndex+1, len(m.queue))
+	}
+
+	gapWidth = m.width - len(queueStatus) - 2 - 2 // 2: Corners | 2: Spaces
+	if gapWidth < 0 {
+		gapWidth = 0
+	}
+
+	return lipgloss.JoinHorizontal(lipgloss.Center,
+		leftCorner,
+		strings.Repeat("─", gapWidth),
+		queueStatus,
+		"──",
+		rightCorner,
+	)
 }
 
 // Generate the footer information

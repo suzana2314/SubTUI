@@ -37,7 +37,7 @@ max_rating = 0 # Exclude songs with a rating less than or equal to this number (
   duration = true
 
   [columns.albums]
-  title = true
+  name = true
   artist = true
   song_count = false
   year = false

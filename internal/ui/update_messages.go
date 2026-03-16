@@ -12,6 +12,7 @@ import (
 	"github.com/MattiaPun/SubTUI/v2/internal/integration"
 	"github.com/MattiaPun/SubTUI/v2/internal/player"
 	"github.com/atotto/clipboard"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/mosaic"
 	"github.com/gen2brain/beeep"
@@ -153,15 +154,55 @@ func (m model) handleLoginResult(msg loginResultMsg) (tea.Model, tea.Cmd) {
 			m.loginErr = errMsg
 		}
 
-		m.viewMode = viewLogin
 		m.loginInputs[0].SetValue(api.AppServerConfig.Server.URL)
-		m.loginInputs[1].SetValue(api.AppServerConfig.Server.Username)
-		m.loginInputs[2].SetValue(api.AppServerConfig.Server.Password)
 
-		m.loginFocus = 0
-		m.loginInputs[0].Focus()
-		m.loginInputs[1].Blur()
-		m.loginInputs[2].Blur()
+		m.viewMode = viewLogin
+		switch strings.ToLower(api.AppServerConfig.Server.AuthMethod) {
+		case "plaintext":
+			m.loginType = 0
+			m.loginInputs[1].Prompt = "Username: "
+			m.loginInputs[1].Placeholder = "username"
+			m.loginInputs[1].EchoMode = textinput.EchoNormal
+			m.loginInputs[1].SetValue(api.AppServerConfig.Server.Username)
+
+			m.loginInputs[2].Prompt = "Password: "
+			m.loginInputs[2].Placeholder = "password"
+			m.loginInputs[2].EchoMode = textinput.EchoPassword
+			m.loginInputs[2].SetValue(api.AppServerConfig.Server.Password)
+
+		case "hashed":
+			m.loginType = 1
+			m.loginInputs[1].Prompt = "Username: "
+			m.loginInputs[1].Placeholder = "username"
+			m.loginInputs[1].EchoMode = textinput.EchoNormal
+			m.loginInputs[1].SetValue(api.AppServerConfig.Server.Username)
+
+			m.loginInputs[2].Prompt = "Token: "
+			m.loginInputs[2].Placeholder = "md5 hash"
+			m.loginInputs[2].EchoMode = textinput.EchoNormal
+			m.loginInputs[2].SetValue(api.AppServerConfig.Server.PasswordToken)
+
+			m.loginInputs[3].Prompt = "Salt: "
+			m.loginInputs[3].Placeholder = "random string"
+			m.loginInputs[3].EchoMode = textinput.EchoNormal
+			m.loginInputs[3].SetValue(api.AppServerConfig.Server.PasswordSalt)
+
+		case "api_key":
+			m.loginType = 2
+			m.loginInputs[1].Prompt = "Username: "
+			m.loginInputs[1].Placeholder = "username"
+			m.loginInputs[1].EchoMode = textinput.EchoNormal
+			m.loginInputs[1].SetValue(api.AppServerConfig.Server.Username)
+
+			m.loginInputs[2].Prompt = "API Key: "
+			m.loginInputs[2].Placeholder = "api key"
+			m.loginInputs[2].EchoMode = textinput.EchoPassword
+			m.loginInputs[2].SetValue(api.AppServerConfig.Server.ApiKey)
+
+			if m.loginFocus > 1 {
+				m.loginFocus = 1
+			}
+		}
 
 		return m, nil
 	}

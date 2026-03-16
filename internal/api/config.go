@@ -35,9 +35,13 @@ type ServerConfig struct {
 }
 
 type Server struct {
-	URL      string `toml:"url"`
-	Username string `toml:"username"`
-	Password string `toml:"password"`
+	URL           string `toml:"url"`
+	AuthMethod    string `toml:"auth_method" comment:"Options: 'plaintext', 'hashed', 'api_key'"`
+	Username      string `toml:"username"`
+	Password      string `toml:"password" comment:"Required if auth_method = 'plaintext'"`
+	PasswordToken string `toml:"password_token" comment:"Required if auth_method = 'hashed'"`
+	PasswordSalt  string `toml:"password_salt" comment:"Required if auth_method = 'hashed'"`
+	ApiKey        string `toml:"api_key" comment:"Required if auth_method = 'api_key'"`
 }
 
 type Security struct {

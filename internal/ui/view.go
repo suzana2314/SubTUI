@@ -147,32 +147,64 @@ func (m model) BaseView() string {
 // Generate the login view
 func loginView(m model) string {
 	errorStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Bold(true)
+	authStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("212")).Bold(true)
+
 	errorDisplay := ""
 	if m.loginErr != "" {
 		errorDisplay = errorStyle.Render(m.loginErr)
-	} else {
-		errorDisplay = ""
 	}
+
+	urlBar := m.loginInputs[0].View()
+	var authMethodBar string
+	var loginInputs string
+
+	switch m.loginType {
+	case loginPassword:
+		authMethodBar = authStyle.Render("Auth Method: < Password >")
+		loginInputs = lipgloss.JoinVertical(lipgloss.Left,
+			m.loginInputs[1].View(), // Username
+			m.loginInputs[2].View(), // Password
+		)
+
+	case loginPasswordHashed:
+		authMethodBar = authStyle.Render("Auth Method: < Token + Salt >")
+		loginInputs = lipgloss.JoinVertical(lipgloss.Left,
+			m.loginInputs[1].View(), // Username
+			m.loginInputs[2].View(), // Token
+			m.loginInputs[3].View(), // Salt
+		)
+
+	case loginApi:
+		authMethodBar = authStyle.Render("Auth Method: < API Key >")
+		loginInputs = lipgloss.JoinVertical(lipgloss.Left,
+			m.loginInputs[1].View(), // Username
+			m.loginInputs[2].View(), // Api Key
+		)
+	}
+
+	form := lipgloss.JoinVertical(lipgloss.Left,
+		urlBar,
+		"", // Spacer
+		authMethodBar,
+		"", // Spacer
+		loginInputs,
+	)
 
 	content := lipgloss.JoinVertical(lipgloss.Center,
 		loginHeaderStyle.Render("Welcome to SubTUI"),
 		"", // Spacer
-		m.loginInputs[0].View(),
-		m.loginInputs[1].View(),
-		m.loginInputs[2].View(),
+		form,
 		"", // Spacer
 		errorDisplay,
-		loginHelpStyle.Render("[ Press Enter to Login ]"),
+		loginHelpStyle.Render("[TAB] Next Field   [Ctrl+t] Change Auth   [ENTER] Login"),
 	)
-
-	box := loginBoxStyle.Render(content)
 
 	return lipgloss.Place(
 		m.width,
 		m.height,
 		lipgloss.Center,
 		lipgloss.Center,
-		box,
+		loginBoxStyle.Render(content),
 		lipgloss.WithWhitespaceChars(" "),
 		lipgloss.WithWhitespaceForeground(lipgloss.NoColor{}),
 	)

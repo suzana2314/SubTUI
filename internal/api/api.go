@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -32,17 +33,28 @@ func generateSalt() string {
 
 // Helper: Compose the needed parameters
 func getAuthParams() url.Values {
-	salt := generateSalt()
-	hash := md5.Sum([]byte(AppServerConfig.Server.Password + salt))
-	token := hex.EncodeToString(hash[:])
-
 	v := url.Values{}
-	v.Set("u", AppServerConfig.Server.Username)
-	v.Set("t", token)
-	v.Set("s", salt)
 	v.Set("v", "1.16.1")
 	v.Set("c", "SubTUI")
 	v.Set("f", "json")
+
+	switch strings.ToLower(AppServerConfig.Server.AuthMethod) {
+	case "plaintext":
+		salt := generateSalt()
+		hash := md5.Sum([]byte(AppServerConfig.Server.Password + salt))
+		token := hex.EncodeToString(hash[:])
+		v.Set("u", AppServerConfig.Server.Username)
+		v.Set("t", token)
+		v.Set("s", salt)
+
+	case "hashed":
+		v.Set("u", AppServerConfig.Server.Username)
+		v.Set("t", AppServerConfig.Server.PasswordToken)
+		v.Set("s", AppServerConfig.Server.PasswordSalt)
+
+	case "api_key":
+		v.Set("apiKey", AppServerConfig.Server.ApiKey)
+	}
 
 	return v
 }
@@ -67,6 +79,9 @@ func redactURL(rawUrl string) string {
 	}
 	if _, ok := q["p"]; ok {
 		q.Set("p", "<REDACTED>")
+	}
+	if _, ok := q["apiKey"]; ok {
+		q.Set("apiKey", "<REDACTED>")
 	}
 
 	parsed.RawQuery = q.Encode()
@@ -117,7 +132,7 @@ func SubsonicLoginCheck() error {
 
 	if data.Response.Status == "failed" && data.Response.Error != nil {
 		if data.Response.Error.Code == 40 {
-			return fmt.Errorf("wrong username or password")
+			return fmt.Errorf("invalid credentials")
 		}
 		return fmt.Errorf("api error: %s", data.Response.Error.Message)
 	}

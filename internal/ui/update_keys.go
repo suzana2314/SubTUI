@@ -7,6 +7,7 @@ import (
 	"github.com/MattiaPun/SubTUI/v2/internal/api"
 	"github.com/MattiaPun/SubTUI/v2/internal/integration"
 	"github.com/MattiaPun/SubTUI/v2/internal/player"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -1063,16 +1064,21 @@ func (m *model) updateLoginInputs(msg tea.Msg) tea.Cmd {
 func login(m model, msg tea.Msg) (model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "tab", "shift+tab", "enter", "up", "down":
-			s := msg.String()
+		key := msg.String()
+		switch key {
+		case "enter":
+			m.loading = true
+			m.loginErr = ""
 
-			// Cycle focus logic
-			if s == "enter" && m.loginFocus == len(m.loginInputs)-1 {
-				m.loading = true
-				m.loginErr = ""
+			domain := m.loginInputs[0].Value()
+			if !strings.Contains(domain, "http") {
+				m.loginErr = "Please include the protocol at the start 'http(s)'"
+				return m, nil
+			}
+			api.AppServerConfig.Server.URL = strings.TrimSuffix(domain, "/")
 
-				domain := m.loginInputs[0].Value()
+			switch m.loginType {
+			case loginPassword:
 				username := m.loginInputs[1].Value()
 				password := m.loginInputs[2].Value()
 
@@ -1081,40 +1087,130 @@ func login(m model, msg tea.Msg) (model, tea.Cmd) {
 					return m, nil
 				}
 
-				if !strings.Contains(domain, "http") {
-					m.loginErr = "Please include the protocol at the start 'http(s)'"
+				api.AppServerConfig.Server.AuthMethod = "plaintext"
+				api.AppServerConfig.Server.Username = username
+				api.AppServerConfig.Server.Password = password
+				api.AppServerConfig.Server.PasswordToken = ""
+				api.AppServerConfig.Server.PasswordSalt = ""
+				api.AppServerConfig.Server.ApiKey = ""
+
+			case loginPasswordHashed:
+				username := m.loginInputs[1].Value()
+				passwordToken := m.loginInputs[2].Value()
+				passwordsalt := m.loginInputs[3].Value()
+
+				if domain == "" || username == "" || passwordToken == "" || passwordsalt == "" {
+					m.loginErr = "All fields are required"
 					return m, nil
 				}
 
-				api.AppServerConfig.Server.URL = strings.TrimSuffix(domain, "/")
+				api.AppServerConfig.Server.AuthMethod = "hashed"
 				api.AppServerConfig.Server.Username = username
-				api.AppServerConfig.Server.Password = password
+				api.AppServerConfig.Server.Password = ""
+				api.AppServerConfig.Server.PasswordToken = passwordToken
+				api.AppServerConfig.Server.PasswordSalt = passwordsalt
+				api.AppServerConfig.Server.ApiKey = ""
 
-				return m, tea.Batch(
-					attemptLoginCmd(),
-				)
+			case loginApi:
+				username := m.loginInputs[1].Value()
+				apiKey := m.loginInputs[2].Value()
+
+				if domain == "" || username == "" || apiKey == "" {
+					m.loginErr = "All fields are required"
+					return m, nil
+				}
+
+				api.AppServerConfig.Server.AuthMethod = "api_key"
+				api.AppServerConfig.Server.Username = username
+				api.AppServerConfig.Server.Password = ""
+				api.AppServerConfig.Server.PasswordToken = ""
+				api.AppServerConfig.Server.PasswordSalt = ""
+				api.AppServerConfig.Server.ApiKey = apiKey
 			}
 
-			if s == "up" || s == "shift+tab" {
-				m.loginFocus--
+			return m, tea.Batch(
+				attemptLoginCmd(),
+			)
+
+		case "up", "down", "tab", "shift+tab":
+			if key == "up" || key == "shift+tab" {
+				switch m.loginType {
+				case loginPassword:
+					m.loginFocus = ((m.loginFocus-1)%3 + 3) % 3
+
+				case loginPasswordHashed:
+					m.loginFocus = ((m.loginFocus-1)%4 + 4) % 4
+
+				case loginApi:
+					m.loginFocus = ((m.loginFocus-1)%3 + 3) % 3
+				}
 			} else {
-				m.loginFocus++
-			}
+				switch m.loginType {
+				case loginPassword:
+					m.loginFocus = (m.loginFocus + 1) % 3
 
-			if m.loginFocus > len(m.loginInputs)-1 {
-				m.loginFocus = 0
-			} else if m.loginFocus < 0 {
-				m.loginFocus = len(m.loginInputs) - 1
-			}
+				case loginPasswordHashed:
+					m.loginFocus = (m.loginFocus + 1) % 4
 
-			for i := 0; i <= len(m.loginInputs)-1; i++ {
-				if i == m.loginFocus {
-					m.loginInputs[i].Focus()
-				} else {
-					m.loginInputs[i].Blur()
+				case loginApi:
+					m.loginFocus = (m.loginFocus + 1) % 3
 				}
 			}
-			return m, nil
+
+		case "ctrl+t":
+			m.loginType = (m.loginType + 1) % 3
+
+			// Clear old inputs
+			m.loginInputs[1].SetValue("")
+			m.loginInputs[2].SetValue("")
+			m.loginInputs[3].SetValue("")
+
+			// Correct the inputs with fitting values
+			switch m.loginType {
+			case loginPassword:
+				m.loginInputs[1].Prompt = "Username: "
+				m.loginInputs[1].Placeholder = "username"
+				m.loginInputs[1].EchoMode = textinput.EchoNormal
+
+				m.loginInputs[2].Prompt = "Password: "
+				m.loginInputs[2].Placeholder = "password"
+				m.loginInputs[2].EchoMode = textinput.EchoPassword
+
+			case loginPasswordHashed:
+				m.loginInputs[1].Prompt = "Username: "
+				m.loginInputs[1].Placeholder = "username"
+				m.loginInputs[1].EchoMode = textinput.EchoNormal
+
+				m.loginInputs[2].Prompt = "Token: "
+				m.loginInputs[2].Placeholder = "md5 hash"
+				m.loginInputs[2].EchoMode = textinput.EchoNormal
+
+				m.loginInputs[3].Prompt = "Salt: "
+				m.loginInputs[3].Placeholder = "random string"
+				m.loginInputs[3].EchoMode = textinput.EchoNormal
+
+			case loginApi:
+				m.loginInputs[1].Prompt = "Username: "
+				m.loginInputs[1].Placeholder = "username"
+				m.loginInputs[1].EchoMode = textinput.EchoNormal
+
+				m.loginInputs[2].Prompt = "API Key: "
+				m.loginInputs[2].Placeholder = "api key"
+				m.loginInputs[2].EchoMode = textinput.EchoPassword
+
+				if m.loginFocus > 1 {
+					m.loginFocus = 1
+				}
+			}
+		}
+	}
+
+	// Focus the correct login input
+	for i := 0; i <= len(m.loginInputs)-1; i++ {
+		if i == m.loginFocus {
+			m.loginInputs[i].Focus()
+		} else {
+			m.loginInputs[i].Blur()
 		}
 	}
 

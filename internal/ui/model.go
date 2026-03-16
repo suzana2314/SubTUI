@@ -68,6 +68,7 @@ type model struct {
 	// Login State
 	loginInputs []textinput.Model
 	loginFocus  int
+	loginType   int
 
 	// Input State
 	lastKey string

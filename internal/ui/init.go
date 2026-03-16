@@ -14,7 +14,10 @@ func InitialModel() model {
 	ti.Width = 50
 
 	startMode := viewList
-	if api.AppServerConfig.Server.Username == "" || api.AppServerConfig.Server.Password == "" || api.AppServerConfig.Server.URL == "" {
+	if api.AppServerConfig.Server.URL == "" ||
+		(api.AppServerConfig.Server.AuthMethod == "plaintext" && (api.AppServerConfig.Server.Username == "" || api.AppServerConfig.Server.Password == "")) ||
+		(api.AppServerConfig.Server.AuthMethod == "hashed" && (api.AppServerConfig.Server.Username == "" || api.AppServerConfig.Server.PasswordToken == "" || api.AppServerConfig.Server.PasswordSalt == "")) ||
+		(api.AppServerConfig.Server.AuthMethod == "api_key" && (api.AppServerConfig.Server.Username == "" || api.AppServerConfig.Server.ApiKey == "")) {
 		startMode = viewLogin
 	}
 
@@ -56,7 +59,7 @@ func (m model) Init() tea.Cmd {
 }
 
 func initialLoginInputs() []textinput.Model {
-	inputs := make([]textinput.Model, 3)
+	inputs := make([]textinput.Model, 4)
 
 	inputs[0] = textinput.New()
 	inputs[0].Placeholder = "http(s)://music.example.com"
@@ -74,6 +77,9 @@ func initialLoginInputs() []textinput.Model {
 	inputs[2].EchoMode = textinput.EchoPassword
 	inputs[2].Width = 30
 	inputs[2].Prompt = "Password: "
+
+	inputs[3] = textinput.New()
+	inputs[3].Width = 30
 
 	return inputs
 }

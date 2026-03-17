@@ -796,6 +796,10 @@ func mediaPlayerSideSongContent(m model, width int, height int) string {
 	var disc string
 	var track string
 
+	if m.queueIndex > len(m.queue) {
+		return " No song playing"
+	}
+
 	song := m.queue[m.queueIndex]
 
 	title := fmt.Sprintf(" %s    : %s", highlightStyle.Bold(true).Render("Title"), LimitString(song.Title, width-12))

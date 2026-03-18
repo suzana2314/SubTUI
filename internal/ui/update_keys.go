@@ -1278,6 +1278,11 @@ func playerMenu(m model, msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	// GLOBAL KEYBINDS
+	if keyMatches(key, api.AppConfig.Keybinds.Global.Quit) {
+		return quit(m, msg)
+	}
+
 	// NAVIGATION KEYBINDS
 	if keyMatches(key, api.AppConfig.Keybinds.Media.ToggleMediaPlayer) || keyMatches(key, api.AppConfig.Keybinds.Global.Back) {
 		return mediaToggleMediaPlayer(m), nil

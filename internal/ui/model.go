@@ -144,9 +144,7 @@ type playQueueResultMsg struct {
 type viewStarredSongsMsg *api.SearchResult3
 
 type coverArtMsg struct {
-	img    image.Image
-	width  int
-	height int
+	img image.Image
 }
 
 type createShareMsg struct {

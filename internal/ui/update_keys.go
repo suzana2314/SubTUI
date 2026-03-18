@@ -868,25 +868,16 @@ func mediaSeekForward(m model) model {
 }
 
 func mediaToggleMediaPlayer(m model) model {
-	var coverMosaicWidth int
-	var coverMosaicHeight int
-
 	if m.focus != focusSearch {
 		if m.showMediaPlayer {
 			m.showMediaPlayer = false
-			coverMosaicWidth = 16
-			coverMosaicHeight = 8
-
 		} else {
 			m.showMediaPlayer = true
-			coverMosaicWidth, coverMosaicHeight = calculateCoverArtSize(m)
 		}
 
 		if m.coverArt != nil {
 			resModel, _ := m.handleCoverArt(coverArtMsg{
-				img:    m.coverArt,
-				width:  coverMosaicWidth,
-				height: coverMosaicHeight,
+				img: m.coverArt,
 			})
 			if updatedModel, ok := resModel.(model); ok {
 				m = updatedModel

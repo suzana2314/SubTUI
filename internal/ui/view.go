@@ -913,10 +913,10 @@ func mediaPlayerSideQueueContent(m model, width int) string {
 	header = highlightStyle.Bold(true).Render(" Next up:")
 	separator = strings.Repeat("-", width)
 
-	for i := 0; i < 5; i++ {
+	for i := 1; i <= 5; i++ {
 		if m.queueIndex+i < len(m.queue) {
 			song := m.queue[m.queueIndex+i]
-			queue += truncate(fmt.Sprintf(" %d. %s - %s", i+1, song.Title, song.Artist), width) + "\n"
+			queue += truncate(fmt.Sprintf(" %d. %s - %s", i, song.Title, song.Artist), width) + "\n"
 		} else {
 			queue += "\n"
 		}

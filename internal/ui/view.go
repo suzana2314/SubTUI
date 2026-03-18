@@ -1254,11 +1254,7 @@ func truncate(s string, width int) string {
 		return ""
 	}
 
-	if len(s) > width {
-		return s[:width-1] + "…"
-	}
-
-	return s
+	return runewidth.Truncate(s, width, "…")
 }
 
 // Helper: Cut of string OR add padding to get specified width

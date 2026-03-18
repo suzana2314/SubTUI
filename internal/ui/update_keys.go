@@ -128,6 +128,30 @@ func (m model) handlesKeys(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return toggleAddRatingPopup(m), nil
 	}
 
+	if keyMatches(key, api.AppConfig.Keybinds.Library.Rate0) {
+		return setRating(m, 0)
+	}
+
+	if keyMatches(key, api.AppConfig.Keybinds.Library.Rate1) {
+		return setRating(m, 1)
+	}
+
+	if keyMatches(key, api.AppConfig.Keybinds.Library.Rate2) {
+		return setRating(m, 2)
+	}
+
+	if keyMatches(key, api.AppConfig.Keybinds.Library.Rate3) {
+		return setRating(m, 3)
+	}
+
+	if keyMatches(key, api.AppConfig.Keybinds.Library.Rate4) {
+		return setRating(m, 4)
+	}
+
+	if keyMatches(key, api.AppConfig.Keybinds.Library.Rate5) {
+		return setRating(m, 5)
+	}
+
 	// MEDIA KEYBINDS
 	if keyMatches(key, api.AppConfig.Keybinds.Media.PlayPause) {
 		return mediaTogglePlay(m, msg), nil
@@ -1410,6 +1434,33 @@ func ratingMenu(key string, m model) (model, tea.Cmd) {
 	}
 
 	return m, nil
+}
+
+func setRating(m model, rating int) (tea.Model, tea.Cmd) {
+	if !cursorInBounds(m) {
+		return m, nil
+	}
+
+	var cmd tea.Cmd
+	switch m.displayMode {
+	case displaySongs:
+		switch m.viewMode {
+		case viewList:
+			m.songs[m.cursorMain].Rating = rating
+			cmd = addRatingCmd(m.songs[m.cursorMain].ID, rating)
+		case viewQueue:
+			m.queue[m.cursorMain].Rating = rating
+			cmd = addRatingCmd(m.queue[m.cursorMain].ID, rating)
+		}
+	case displayAlbums:
+		m.albums[m.cursorMain].Rating = rating
+		cmd = addRatingCmd(m.albums[m.cursorMain].ID, rating)
+	case displayArtist:
+		m.artists[m.cursorMain].Rating = rating
+		cmd = addRatingCmd(m.artists[m.cursorMain].ID, rating)
+	}
+
+	return m, cmd
 }
 
 // Helper for infinte scrolling

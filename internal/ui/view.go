@@ -1122,6 +1122,12 @@ func helpViewContent() string {
 		line(keys(api.AppConfig.Keybinds.Library.AddRating), "Add rating"),
 		line(keys(api.AppConfig.Keybinds.Library.GoToAlbum), "Go to album"),
 		line(keys(api.AppConfig.Keybinds.Library.GoToArtist), "Go to artist"),
+		line(keys(api.AppConfig.Keybinds.Library.Rate0), "Rate 0"),
+		line(keys(api.AppConfig.Keybinds.Library.Rate1), "Rate 1"),
+		line(keys(api.AppConfig.Keybinds.Library.Rate2), "Rate 2"),
+		line(keys(api.AppConfig.Keybinds.Library.Rate3), "Rate 3"),
+		line(keys(api.AppConfig.Keybinds.Library.Rate4), "Rate 4"),
+		line(keys(api.AppConfig.Keybinds.Library.Rate5), "Rate 5"),
 	)
 
 	mediaKeybinds := section("MEDIA",
